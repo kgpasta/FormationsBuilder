@@ -1,0 +1,23 @@
+canvas{
+    border: 1px solid #9C9898;
+    cursor: pointer;
+}
+.dropdown-menu{
+    cursor:pointer;
+}
+th{
+    cursor:pointer;
+}
+.row-fluid{
+    margin-bottom:20px;
+}
+.btn-group{
+    float:left;
+}
+.progress{
+    width:800px;
+}
+#Formations{
+    margin-top:20px;
+    margin-bottom:20px;
+}

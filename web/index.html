@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="css/Formations.css"/>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://www.kineticjs.com/download/kinetic-v4.0.1.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="js/FormationTables.js"></script>
+        <script type="text/javascript" src="js/UserInteraction.js"></script>
+        <script type="text/javascript" src="js/Render.js"></script>
+        <script type="text/javascript" src="js/LocalStorage.js"></script>
+        <title>Formations</title>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row-fluid">
+                <div class="span10">
+                    <h4>Formations Builder</h4>
+                </div>
+                <div class="span2">
+                    <div class="btn-group">
+                        <a class="btn btn-info dropdown-toggle" data-toggle="dropdown" href="#">
+                            Stage Manager
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a id="NewStage">New Stage</a></li>
+                            <li><a id="LoadStage">Load Stage</a></li>
+                            <li><a id="SaveStage">Save Stage</a></li>
+                            <li><a id="DeleteStage">Delete Stage</a></li>           
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="Formations" class="container">
+        </div>
+        <div class="container">
+            <div class="row-fluid">
+                <a class="btn btn-success" id="CreateDancerButton">Create New Dancer</a>
+                <a class="btn btn-primary" id="EditDancerButton">Edit Dancer</a>
+                <a class="btn btn-danger" id="DeleteDancerButton">Delete Dancers</a>
+            </div>
+        </div>
+        <div class="container">
+            <table class="table table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Group</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal" id="CreateModal" tabindex="-1" role="dialog" aria-labelledby="CreateModalLabel" aria-hidden="true">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="CreateModalLabel">Create Dancer</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div id="nameControl" class="control-group">
+                        <label class="control-label" for="DancerName">Dancer Name</label>
+                        <div class="controls">
+                            <input name="name" type="text" id="DancerName" placeholder="Dancer Name">
+                            <span class="help-inline">Please provide a name</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="radio inline">
+                                <input type="radio" name="gender" value="Male" checked="checked" /> Male
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="gender" value="Female" /> Female
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="inline">Group</label>
+                            <select id="group" name="group">
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="inline">Starting Position</label>
+                            <select id="starting" name="StartingPosition">
+                                <option>Center</option>
+                                <option>Left</option>
+                                <option>Right</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" id="CreateDancer" data-dismiss="modal" class="btn btn-success">Create Dancer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="EditModal" tabindex="-1" role="dialog" aria-labelledby="EditModalLabel" aria-hidden="true">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="EditModalLabel">Edit Dancer</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="inline">Dancers:</label>
+                            <select id="EditDancers">
+                            </select>
+                        </div>
+                    </div>
+                    <div id="EditNameControl" class="control-group">
+                        <div class="controls">
+                            <input name="name" type="text" id="EditDancerName" placeholder="Change Dancer Name">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="inline">Group</label>
+                            <select id="editGroup" name="group">
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" id="EditDancer" data-dismiss="modal" class="btn btn-primary">Edit Dancer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="DeleteModalLabel" aria-hidden="true">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="DeleteModalLabel">Delete Dancer</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="inline">Dancers:</label>
+                            <select id="DeleteDancers" multiple="multiple">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" id="DeleteDancer" data-dismiss="modal" class="btn btn-danger">Delete Dancers</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="StageModal" tabindex="-1" role="dialog" aria-labelledby="StageModalLabel" aria-hidden="true">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="StageModalLabel">Stage Manager</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div id="StageNameControl" class="control-group">
+                        <label class="control-label" for="StageName">Stage Name</label>
+                        <div class="controls">
+                            <input name="name" type="text" id="StageName" placeholder="Stage Name">
+                            <span class="help-inline">Please provide a name</span>
+                        </div>
+                    </div>
+                    <div id="StageListControl" class="control-group">
+                        <div class="controls">
+                            <label class="">Stages</label>
+                            <select id="StageList" name="StageList">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" id="StageModalSave" data-dismiss="modal" class="btn btn-primary">Save</button>
+                            <button type="submit" id="StageModalDelete" data-dismiss="modal" class="btn btn-danger">Delete</button>
+                            <button type="submit" id="StageModalLoad" data-dismiss="modal" class="btn btn-info">Load</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
