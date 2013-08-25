@@ -11,13 +11,6 @@ $(document).ready(function(){
         $("#DancerName").focus();
     });
     
-    $("#DancerName").focus(function(){
-        $(".help-inline").hide();
-        if($("#nameControl").hasClass("error")){
-            $("#nameControl").removeClass("error");
-        }
-    });
-    
     $("#EditDancerButton").click(function(){
         $('#EditModal').modal();
         changeSelects();
@@ -54,13 +47,6 @@ $(document).ready(function(){
         $("#StageName").focus();
     });
     
-    $("#StageName").focus(function(){
-        $(".help-inline").hide();
-        if($("#StageNameControl").hasClass("error")){
-            $("#StageNameControl").removeClass("error");
-        }
-    });
-    
     $("#DeleteStage").click(function(){
         $("#StageModal").modal();
         $("#StageNameControl").hide();
@@ -74,15 +60,19 @@ $(document).ready(function(){
         getAllStageNames();
     });
     
-    $("#NewAnimationButton").click(function(){
-        $("#AnimationBox").show(); 
-        stage.getChildren()[2].removeChildren();
-        stage.draw();
-    });
-    
-    $("#SaveAnimationButton").click(function(){
-        $("#AnimationBox").hide(); 
-    });
+    var frames = 0;
+    $("#NewFrameButton").click(function(){
+        addFrame(stageManager);
+        var action = $("<a>").attr("href","#").attr("id",frames).addClass("list-group-item").text("Frame");
+        action.click(function(){
+            $(".list-group-item").removeClass("active");
+            var id = $(this).attr("id");
+            $(this).addClass("active");
+            loadFrame(stageManager,id);
+        });
+        $("#FrameList").append(action);
+        frames++;
+    });  
     
     $("#Play8Count").click(function(){
         $("#Play8Count").hide();
@@ -117,7 +107,7 @@ function addDropDown(){
     $("#DeleteDancers").empty();
     $("#EditDancers").empty();
     var tableData = getTableData();
-    for(ii = 0; ii < tableData.length; ii++){
+    for(var ii = 0; ii < tableData.length; ii++){
         var dancer = tableData[ii][0];
         $("#DeleteDancers").append("<option id=\"" + ii + "\">" + dancer + "</option>");
         $("#EditDancers").append("<option id=\"" + ii + "\">" + dancer + "</option>");

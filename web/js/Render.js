@@ -1,9 +1,15 @@
+var width, height;
+var stageManager = new Object();
 $(document).ready(function(){
-    stage = new Kinetic.Stage({
+    width = $(".col-lg-6").width();
+    height = width * 3/4;
+    var stage = new Kinetic.Stage({
         container: "Formations",
-        width: 800,
-        height: 600
+        width: width,
+        height: Math.ceil(height)
     });
+    stageManager.stage = stage;
+    stageManager.frames = new Array();
     var gridLayer = generateGridLayer();
     stage.add(gridLayer);
     var dancerLayer = new Kinetic.Layer();
@@ -13,15 +19,9 @@ $(document).ready(function(){
 
     $("#CreateDancer").click(function(){
         var name = $("#DancerName").val();
-        if(name == ""){
-            $(".help-inline").show();
-            $("#nameControl").addClass("error");
-            return false;
-        }
         var gender = $("input:radio[name=gender]:checked").val();
         var group = $("#group").val();
-        var starting = startingPosition($("#starting").val());
-        addDancerToLayer([name,gender,group,starting],dancerLayer);
+        addDancerToLayer(stage,[name,gender,group],dancerLayer);
         return true;
     });
     
@@ -34,23 +34,23 @@ $(document).ready(function(){
         editTable(node.attr("id"),name,gender,group);
         addDropDown();
         var dancer = stage.get("." + node.val());
-        dancer[0].attrs.name = name;
+        dancer[0].setName(name);
         if(gender == "Male"){
-            dancer[0].attrs.sides = 4;
+            dancer[0].setSides(4);
         } else{
-            dancer[0].attrs.sides = 8;
+            dancer[0].setSides(8);
         }
-        dancer[0].attrs.fill = color;
-        dancer[0].attrs.stroke = color;
+        dancer[0].setFill(color);
+        dancer[0].setStroke(color);
         dancerLayer.draw();
     });
     
     $("#DeleteDancer").click(function(){
         var node = $("#DeleteDancers :selected");
-        for(ii=0; ii < node.length; ii++){
+        for(var ii=0; ii < node.length; ii++){
             deleteTable($(node[ii]).attr("id"));
             var dancer = stage.get("." + $(node[ii]).val());
-            dancerLayer.remove(dancer[0]);
+            dancer[0].destroy();
             dancerLayer.draw();
             $(node[ii]).remove();
         }
@@ -82,15 +82,12 @@ $(document).ready(function(){
 });
 
 function loadScene(stage,data){
-    stage.removeChildren();
-    stage.load(data);
-    var layerPointers = [stage.getChildren()[0],stage.getChildren()[1]];
     var dancers = stage.getChildren()[1].getChildren();
-    dancers = attachEventHandlers(dancers);
+    dancers = attachEventHandlers(stage,dancers);
     emptyTable();
-    for(ii = 0; ii < dancers.length; ii++){
+    for(var ii = 0; ii < dancers.length; ii++){
         var gender = "Female";
-        if(dancers[ii].getSides == 4){
+        if(dancers[ii].getSides() == 4){
             gender = "Male";
         }
         var group = colorToGroup(dancers[ii].getFill());
@@ -100,15 +97,20 @@ function loadScene(stage,data){
     return layerPointers;
 }
 
-function renderDancer(dancerName,gender,color,starting){
+function loadFrame(stageManager,id){
+    var data = stageManager.frames[id];
+    loadScene(stageManager.stage,data);
+}
+
+function renderDancer(stage,dancerName,gender,color){
     var dancer = null;
     if(gender == "Female"){
         dancer = new Kinetic.RegularPolygon({
             name: dancerName,
-            x: starting[0],
-            y: starting[1],
+            x: width / 2,
+            y: height / 2,
             sides: 8,
-            radius: 20,
+            radius: height / 40,
             fill: color,
             stroke: color,
             strokeWidth: 3,
@@ -118,24 +120,24 @@ function renderDancer(dancerName,gender,color,starting){
     else{
         dancer = new Kinetic.RegularPolygon({
             name: dancerName,
-            x: starting[0],
-            y: starting[1],
+            x: width / 2,
+            y: height / 2,
             sides: 4,
-            radius: 20,
+            radius: height / 40,
             fill: color,
             stroke: color,
             strokeWidth: 3,
             draggable:true
         });
     }
-    attachEventHandlers([dancer]);
+    attachEventHandlers(stage,[dancer]);
     
     return dancer;
 }
 
 var gridArray = new Array();
-function attachEventHandlers(dancers){
-    for(ii = 0; ii < dancers.length; ii++){
+function attachEventHandlers(stage,dancers){
+    for(var ii = 0; ii < dancers.length; ii++){
         dancers[ii].on("dragstart",function(){
             selectDancer(this,stage); 
             if(isAnimation()){
@@ -154,13 +156,16 @@ function attachEventHandlers(dancers){
                 gridArray.push(roundPosition(this.getPosition().y));
                 addAnimationLine(gridArray,this);
             }
-            var x = roundPosition(this.getPosition().x);
-            var y = roundPosition(this.getPosition().y);
-            this.transitionTo({
+            var x = roundPositionX(this.getPosition().x);
+            var y = roundPositionY(this.getPosition().y);
+            
+            var tween = new Kinetic.Tween({
+                node: this, 
+                duration: 0.1,
                 x: x,
-                y: y,
-                duration: 0.1
+                y: y
             });
+            tween.play();
         });
         dancers[ii].on("click", function(){
             selectDancer(this,stage);
@@ -177,53 +182,50 @@ function attachEventHandlers(dancers){
 
 function selectDancer(dancer,stage){
     var dancers = stage.getChildren()[1].getChildren();
-    for(ii = 0; ii < dancers.length; ii++){
+    for(var ii = 0; ii < dancers.length; ii++){
         dancers[ii].setStroke(dancers[ii].getFill());
     }
-    dancer.setStroke("black");
-    selectTable(dancer.getName());
-}
-
-//Needed?
-function isSelected(dancer){
-    if(dancer.getStroke() == "black"){
-        return true;
+    if(dancer != null){
+        dancer.setStroke("black");
+        selectTable(dancer.getName());
+        stage.draw();
     }
-    return false;
 }
 
-function addDancerToLayer(data,layer){
+function addDancerToLayer(stage,data,layer){
     addTable(data[0],data[1],data[2]);
     addDropDown();
     var color = colorChooser(data[2]);
-    layer.add(renderDancer(data[0],data[1],color,data[3]));
+    layer.add(renderDancer(stage,data[0],data[1],color,data[3]));
     layer.draw();
     return layer;
 }
 
 function generateGridLayer(){
     var gridLayer = new Kinetic.Layer();
-    for(ii = 0; ii < 800; ii = ii + 40){
+    var increment = width / 20;
+    for(var ii = 0; ii <= width; ii = ii + increment){
         var sWidth = 0.2;
-        if(ii == 400){
+        if(ii == width / 2){
             sWidth = 0.5;
         }
         var YgridLine = new Kinetic.Line({
-            points: [ii, 0, ii, 600],
+            points: [ii, 0, ii, height],
             stroke: "blue",
             strokeWidth: sWidth
         });
         gridLayer.add(YgridLine);
     }
-    for(ii = 0; ii < 600; ii = ii + 40){
-        var sWidth = 0.2; 
-        if(ii == 280){
-            sWidth = 0.5;
+    increment = height / 20;
+    for(ii = 0; ii <= height; ii = ii + increment){
+        var sHeight = 0.2; 
+        if(ii == height / 2){
+            sHeight = 0.5;
         }
         var XgridLine = new Kinetic.Line({
-            points: [0,ii, 800, ii],
+            points: [0,ii, width, ii],
             stroke: "blue",
-            strokeWidth: sWidth
+            strokeWidth: sHeight
         });
         gridLayer.add(XgridLine);
     }
@@ -252,24 +254,25 @@ function colorToGroup(group){
     return group;
 }
 
-function startingPosition(start){
-    var coords = new Array();
-    if(start == "Left"){
-        coords = [100,280];
-    }else if(start == "Right"){
-        coords = [700,280];
-    } else{
-        coords = [400,280];
-    }
-    return coords;
-}
-
-function roundPosition(n){
-    var remainder = n % 20;
-    if(remainder < 10){
+function roundPositionX(n){
+    var increment = width / 40;
+    var remainder = n % increment;
+    if(remainder < increment / 2){
         n = n-remainder;
     } else{
-        remainder = 20 - remainder;
+        remainder = increment - remainder;
+        n = n + remainder;
+    }
+    return n;
+}
+
+function roundPositionY(n){
+    var increment = height / 40;
+    var remainder = n % increment;
+    if(remainder < increment / 2){
+        n = n-remainder;
+    } else{
+        remainder = increment - remainder;
         n = n + remainder;
     }
     return n;
@@ -295,16 +298,16 @@ function createPath(gridArray,color,name){
     return line;
 }
 
-function addAnimationLine(gridArray,dancer){
+function addAnimationLine(stage,gridArray,dancer){
     var line = createPath(gridArray,dancer.getFill(),dancer.getName());
     stage.getChildren()[2].add(line);
     stage.draw();
 }
 
-function runAnimation(){
+function runAnimation(stage){
     var dancers = stage.getChildren()[1].getChildren();
     var lineLayer = stage.getChildren()[2];
-    for(ii = 0; ii < dancers.length; ii++){
+    for(var ii = 0; ii < dancers.length; ii++){
         var lines = lineLayer.get("." + dancers[ii].getName());
         dancers[ii].setX(lines[0].getPoints()[0].x);
         dancers[ii].setY(lines[0].getPoints()[0].y);
@@ -327,10 +330,10 @@ function moveDancer(len,lines,ii,dancer){
     return transition;
 }
 
-function stopAnimation(){
+function stopAnimation(stage){
     var dancers = stage.getChildren()[1].getChildren();
     var lineLayer = stage.getChildren()[2];
-    for(ii = 0; ii < dancers.length; ii++){
+    for(var ii = 0; ii < dancers.length; ii++){
         var lines = lineLayer.get("." + dancers[ii].getName());
         var len = lines.length;
         
@@ -338,4 +341,8 @@ function stopAnimation(){
         dancers[ii].setY(lines[len - 1].getPoints()[1].y);
         stage.draw();
     }
+}
+
+function addFrame(stageManager){
+    stageManager.frames.push(stageManager.stage.toJSON());
 }
